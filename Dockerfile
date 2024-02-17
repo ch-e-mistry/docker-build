@@ -1,17 +1,19 @@
-FROM node:16
 
-# Alkalmazás könyvtár létrehozása
-WORKDIR /usr/src/app
+#----------------------------------------------------------------------
+#https://gallery.ecr.aws/docker/library/golang
+ARG BASE_IMAGE="public.ecr.aws/docker/library/golang:1.22.0-alpine3.19" 
+#----------------------------------------------------------------------
+FROM $BASE_IMAGE as builder
+#VARIABLES FOR bom
+ARG     BOM_VERSION="v0.6.0"
 
-# Függőségek telepítése
-COPY package*.json ./
-RUN npm install
+# Install required packages and clean up
+#https://pkg.go.dev./sigs.k8s.io/bom@v0.6.0
+RUN go install sigs.k8s.io/bom/cmd/bom@${BOM_VERSION} 
 
-# Alkalmazás forráskódjának másolása
-COPY . .
-
-# Port nyitása
-EXPOSE 8080
-
-# Alkalmazás indítása
-CMD [ "node", "app.js" ]
+# Final stage
+FROM alpine:3.19.1
+COPY --from=builder /go/bin/bom /usr/local/bin/bom
+HEALTHCHECK --interval=120s --timeout=245s --start-period=10s \
+CMD     bom version || exit 1
+ENTRYPOINT      []
