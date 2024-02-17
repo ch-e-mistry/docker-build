@@ -1,6 +1,4 @@
-```Dockerfile
-# Kép alapjának kiválasztása
-FROM node:14
+FROM node:16
 
 # Alkalmazás könyvtár létrehozása
 WORKDIR /usr/src/app
